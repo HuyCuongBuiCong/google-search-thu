@@ -1,0 +1,105 @@
+<html>
+  <head>
+    <title>JSON Custom Search API Example</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://unpkg.com/mithril/mithril.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+</head>
+  <style>
+      .page-container{
+          margin: 15px auto;
+          width: 95%;
+      }
+      #content{
+            margin: 20px 10px ;
+      }
+      .card{
+          width: 90%;
+          margin: 10px auto
+      }
+      .term{
+          margin: 0px 20px;
+      }
+      .term .btn{
+        border-radius: 10px;
+      }
+  </style>
+  <body>
+    <div class="page-container">
+        <div id="buttons"></div>
+        <div id="content"></div>
+    </div>
+    <script>
+
+    const  renderCardInfo = (item) => {
+        return m("div.card", {"style":{"width":"100%"}}, 
+            m("div.card-body",
+                [
+                m("h5.card-title", 
+                    `${item.displayLink}`
+                ),
+                m("h6.card-subtitle.mb-2.text-muted", 
+                m.trust(`${item.htmlTitle}`)
+                ),
+                m("p.card-text", 
+                 m.trust(`${item.htmlSnippet}`)
+                ),
+                m(`a.card-link[href='${item.link}'][target='_blank']`, 
+                    "Open Link"
+                )
+                ]
+            )
+        )
+    }
+
+    const renderList = (items) => {
+        const cards = items.map(renderCardInfo);
+        return  m("div.row", cards )
+    }
+
+
+    function hndlr(items) {
+        const content = document.getElementById('content')  
+        m.render(content, renderList(items))
+    }
+
+    const handleClick = async (term) => {
+        let savedData = await fetch(`https://google-search-minhthu.herokuapp.com/term?term=${term}`)
+        let savedDataJson = await savedData.json()
+        if (savedDataJson.success){
+            hndlr(JSON.parse(savedDataJson.result.data))
+        } else {
+            const data = await fetch(`https://www.googleapis.com/customsearch/v1?key=AIzaSyAyCAaJ5D93E5_ZkGKvDVPjCWY-zbqJt0o&cx=014375217531203323030:rksusswdbm4&dateRestrict=d[1]&sort=date&q=${term}`)
+            const jsonData = await data.json()
+            hndlr(jsonData.items)
+            $.ajax({
+                type: "POST",
+                url: 'https://google-search-minhthu.herokuapp.com/term',
+                data: {term: term, data:JSON.stringify(jsonData.items)},
+                success: ()=>{  console.log(`Add new term ${term}`)},
+                
+                });
+            
+    
+        }
+    }
+
+    const termToButton = (term) => {
+        return m("div.term", 
+                [m(`button.btn.btn-primary[type='button']`, {onclick : () => {handleClick(`${term}`)}}, `${term}`
+                )])
+         
+    }
+
+    const renderListButton = (terms) => {
+        return m("div.row", terms.map(termToButton))
+    }
+
+    const buttons = document.getElementById('buttons')  
+    m.render(buttons, renderListButton(['ImexPharm', 'DHG']))
+
+    </script>
+       
+  </body>
+</html>
