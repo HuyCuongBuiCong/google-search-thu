@@ -24,7 +24,7 @@
       }
       .card{
           width: 90%;
-          margin: 10px auto
+          margin: 5px 40px 5px 40px;
       }
       .term{
           margin: 0px 20px;
@@ -42,7 +42,7 @@
     <script>
 
     const  renderCardInfo = (item) => {
-        return m("div.card", {"style":{"width":"100%"}}, 
+        return m("div", {class:"card col-12 col-xl-5", style:{"width":"100%"}}, 
             m("div.card-body",
                 [
                 m("h5.card-title", 
