@@ -41,6 +41,9 @@
     </div>
     <script>
 
+    const localhost = 'http://127.0.0.1:5000'
+    const server = 'https://google-search-minhthu.herokuapp.com'
+    const url = server;
     const  renderCardInfo = (item) => {
         return m("div", {class:"card col-12 col-xl-5", style:{"width":"100%"}}, 
             m("div.card-body",
@@ -73,27 +76,37 @@
         m.render(content, renderList(items))
     }
 
-    const handleClick = async (term) => {
-         const content = document.getElementById('content')  
-         m.render(content, m("div.spinner-border.text-primary"))
-
-        let savedData = await fetch(`https://google-search-minhthu.herokuapp.com/term?term=${term}`)
-        let savedDataJson = await savedData.json()
-        if (savedDataJson.success){
-            hndlr(JSON.parse(savedDataJson.result.data))
-        } else {
-            const data = await fetch(`https://www.googleapis.com/customsearch/v1?key=AIzaSyAyCAaJ5D93E5_ZkGKvDVPjCWY-zbqJt0o&cx=014375217531203323030:rksusswdbm4&dateRestrict=d[1]&sort=date&q=${term}`)
+    const getNewData = async (term) => {
+        const data = await fetch(`https://www.googleapis.com/customsearch/v1?key=AIzaSyAyCAaJ5D93E5_ZkGKvDVPjCWY-zbqJt0o&cx=014375217531203323030:rksusswdbm4&dateRestrict=d[1]&sort=date&q=${term}`)
             const jsonData = await data.json()
             hndlr(jsonData.items)
             $.ajax({
                 type: "POST",
-                url: 'https://google-search-minhthu.herokuapp.com/term',
+                url: `${url}/term`,
                 data: {term: term, data:JSON.stringify(jsonData.items)},
                 success: ()=>{  console.log(`Add new term ${term}`)},
                 
                 });
+    }
+    const handleClick = async (term) => {
+         const content = document.getElementById('content')  
+         m.render(content, m("div.spinner-border.text-primary"))
+
+        let savedData = await fetch(`${url}/term?term=${term}`)
+        let savedDataJson = await savedData.json()
+        
+        if (savedDataJson.success){
+            let updatedAt = new Date(savedDataJson.result.updatedAt);
+            let msDifference =  new Date() - updatedAt;
+            let minutes = Math.floor(msDifference/1000/60);
+            if (minutes < 30){
+                hndlr(JSON.parse(savedDataJson.result.data))
+            } else {
+                getNewData(term)
+            }
             
-    
+        } else {
+            getNewData(term)   
         }
     }
 
